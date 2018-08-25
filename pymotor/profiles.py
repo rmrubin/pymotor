@@ -2,40 +2,12 @@
 import numpy as np
 from scipy import signal
 import pandas as pd
-import matplotlib.pyplot as plt
-import pickle
 
-
-FS_HZ = 1000.0
-
+import pymotor.files as files
+import pymotor.plots as plots
+from pymotor.conversions import *
 
 class Profile:
-
-    def _plot_df(self, df, plot_title='pandas.DataFrame', filename=None):
-        
-        labels = list(df.columns.values)
-        num_plots = df.shape[1] - 1   
-
-        plt.figure(figsize=(6.5, 9), clear=True)
-     
-        for i in range(num_plots):
-
-            plt.subplot(num_plots, 1, i + 1)
-            plt.plot(df.iloc[:, 0].get_values(), df.iloc[:, i + 1].get_values(), linestyle='solid', linewidth=0.5, color=(0.0, 0.0, 0.0))
-            plt.grid(linestyle=':', linewidth=1, color=(0.75, 0.75, 0.75))
-            plt.ylabel(labels[i + 1])
-
-            if i == 0:
-                plt.title(plot_title)
-            if i == num_plots - 1:
-                plt.xlabel(labels[0])
-        
-        plt.tight_layout()
-
-        if filename is None:
-            plt.show()
-        else:
-            plt.savefig(filename)
 
     def _gen_deriv(self, data, fs, init=0):
 
@@ -66,25 +38,19 @@ class Profile:
         return intgrl_tab
 
     def save(self, filename):
-        with open(filename, 'wb') as f:  
-            pickle.dump((self.settings, self.stats, self.profile), f)    
+        files._save((self.settings, self.stats, self.profile), filename)    
 
     def load(self, filename):
-        with open(filename, 'rb') as f:
-            (self.settings, self.stats, self.profile) = pickle.load(f)    
+        (self.settings, self.stats, self.profile) = files._load(filename)    
 
     def html(self, filename):
-        with open(filename, 'w') as f:
-            print(self.profile.to_html(), file=f)
+        files._html(self.profile, filename)
 
     def csv(self, filename):
-        with open(filename, 'w') as f:
-            print(self.profile.to_csv(), file=f)
+        files._csv(self.profile, filename)
 
     def xlsx(self, filename):
-        writer = pd.ExcelWriter(filename)
-        self.profile.to_excel(writer,'Sheet1')
-        writer.save()
+        files._xlsx(self.profile, filename)
 
     def print(self, filename=None):
 
@@ -100,10 +66,12 @@ class Profile:
             stats_str += key + ': ' + str(value) + '\n'
                 
         if filename:
-            with open(filename, 'w') as f:
-                print(settings_str + stats_str + profile_str, file=f)     
+            files._txt((settings_str + stats_str + profile_str), filename)
         else:
             print(profile_str + settings_str + stats_str)
+
+    def drop_profile(self):
+        del self.profile
 
 
 class LinearMotion(Profile):
@@ -138,6 +106,8 @@ class LinearMotion(Profile):
         else:
             self.settings = settings
 
+        self.generate()
+
     def generate(self):
         (self.profile, self.stats) = self._gen_linpro(self.settings)
 
@@ -152,7 +122,7 @@ class LinearMotion(Profile):
 
         df = self.profile[['t', 'a', 'v', 'x']]
         df = df.rename(columns={'t': t_label, 'a': a_label, 'v': v_label, 'x': x_label})
-        self._plot_df(df, plot_title=plot_title, filename=filename)
+        plots._plot_df(df, plot_title=plot_title, filename=filename)
 
     def _gen_x_from_v(self, v, fs, x0=0):
         return self._gen_intgrl(v, fs, x0)
@@ -171,13 +141,13 @@ class LinearMotion(Profile):
         t = t / fs
         return t
 
-    def _get_t1_from_v1_and_x1(v1, x1):
+    def _get_t1_from_v1_and_x1(self, v1, x1):
         return (2 / v1) * x1
 
-    def _get_t1_from_v1_and_a1(v1, a1):
+    def _get_t1_from_v1_and_a1(self, v1, a1):
         return (1 / a1) * v1
 
-    def _gen_acc_from_v_and_t(self, v1, t1, fs=FS_HZ, smooth=True):
+    def _gen_acc_from_v_and_t(self, v1, t1, fs, smooth):
 
         tablen = np.int(t1 * fs)
 
@@ -196,7 +166,7 @@ class LinearMotion(Profile):
 
         return profile
 
-    def _gen_con_from_v_and_t(self, v1, t1, x0, fs=FS_HZ):
+    def _gen_con_from_v_and_t(self, v1, t1, x0, fs):
 
         v1 = np.float(v1)
         t1 = np.float(t1)
@@ -213,7 +183,7 @@ class LinearMotion(Profile):
 
         return profile
 
-    def _gen_dec_from_v_and_t(self, v1, t1, v0, x0, fs=FS_HZ, smooth=True):
+    def _gen_dec_from_v_and_t(self, v1, t1, v0, x0, fs, smooth):
 
         tablen = np.int(t1 * fs)
 
@@ -309,22 +279,158 @@ class LinearMotion(Profile):
         return (profile, stats)
 
 
-if __name__ == '__main__':
+class LinearForce(Profile):
 
-    lm_settings = {
-        'fs': 1000.0,
-        'max_velocity': 1,
-        'acc_mode': 'T',
-        'acc_value': 1,
-        'acc_smooth': True,
-        'con_mode': 'T',
-        'con_value': 1,
-        'dec_mode': 'T',
-        'dec_value': 1,
-        'dec_smooth': False,
-    }
+    def __init__(self, settings, linear_motion_object):
 
-    lm = LinearMotion(lm_settings)
-    lm.generate()
-    lm.print()
-    lm.plot()
+        self.settings = settings
+        self.lm = linear_motion_object
+        self.generate()
+
+    def generate(self):
+
+        self.profile = self.lm.profile
+        self.lm.drop_profile()
+        
+        self.stats = {}
+        self._calc_force_constants()
+
+        f_series = self.profile['a'].copy()
+        f_series = f_series.apply(self._get_force)
+        self.profile['f'] = f_series
+
+    def plot(self, 
+        filename=None,
+        plot_title='Required Force',
+        t_label='Time (s)',
+        x_label='Distance (m)',
+        v_label='Velocity (m/s)',
+        a_label='Acceleration (m/s^2)',
+        f_label='Force (N)',
+        ):
+
+        df = self.profile[['t', 'f', 'a', 'v', 'x']]
+        df = df.rename(columns={'t': t_label, 'f': f_label, 'a': a_label, 'v': v_label, 'x': x_label})
+        plots._plot_df(df, plot_title=plot_title, filename=filename)
+
+    def _calc_force_constants(self):
+
+        moving_mass = self.settings['moving_mass']
+        f_preload = self.settings['preload_force']
+        incline = self.settings['incline_angle']
+        friction_coef = self.settings['friction_coef']
+        gravity = self.settings['gravity']
+        sf_and_eff = self.settings['safety_factor'] / self.settings['efficiency']
+        
+        f_incline = moving_mass * gravity * np.sin(np.radians(incline))
+        f_friction = friction_coef * moving_mass * gravity * np.cos(np.radians(incline))
+        f_constant = f_preload + f_incline + f_friction
+
+        self._f_scale = sf_and_eff * moving_mass 
+        self._f_offset = sf_and_eff * f_constant
+
+        self.stats['f_incline'] = f_incline
+        self.stats['f_friction'] = f_friction
+        self.stats['f_constant'] = f_constant
+
+    def _get_force(self, a):
+        return a * self._f_scale + self._f_offset
+
+
+class AngularTorque(Profile):
+
+    def __init__(self, linear_force_object, motor, coupler, gear, drivetrain):
+        self.lf = linear_force_object
+        self.motor = motor
+        self.coupler = coupler
+        self.gear = gear
+        self.drivetrain = drivetrain
+        self.generate()
+
+    def generate(self):
+        
+        self.profile = self.lf.profile
+        self.lf.drop_profile()
+        
+        self.settings = {}
+        self.settings['safety_factor'] = self.lf.settings['safety_factor']
+
+        self.stats = {}
+        self._calc_intertia()
+
+        revs_series = self.profile['x'].copy()
+        self.profile['revs'] = revs_series.apply(self._get_revs_from_x)
+
+        hz_series = self.profile['v'].copy()
+        self.profile['hz'] = hz_series.apply(self._get_hz_from_v)
+        
+        hzps_series = self.profile['a'].copy()
+        self.profile['hzps'] = hzps_series.apply(self._get_hzps_from_a)
+
+        tau_rotating_series = self.profile['hzps'].copy()        
+        self.profile['tau_rotating'] = tau_rotating_series.apply(self._get_tau_rotating_from_hzps)
+
+        tau_linear_series = self.profile['f'].copy()        
+        self.profile['tau_linear'] = tau_linear_series.apply(self._get_tau_linear_from_f)
+        
+        self.profile['tau'] = self.profile['tau_rotating'] + self.profile['tau_linear']
+
+        tau_motor_series = self.profile['hz'].copy()
+        self.profile['tau_motor'] = tau_motor_series.apply(self._get_tau_motor_from_hz)
+
+    def plot(self, 
+        filename=None,
+        plot_title='Required (Black) and Available (Red) Torque',
+        t_label='Time (s)',
+        hz_label='Velocity (Hz)',
+        tau_label='Torque (N*m)',
+        ):
+
+        df = self.profile[['t', 'tau', 'hz']]
+        df = df.rename(columns={'t': t_label, 'tau': tau_label, 'hz': hz_label})
+        series = self.profile['tau_motor']
+        plots._plot_df_dual(df, series, plot_title=plot_title, filename=filename, height=6.0)
+
+    def _calc_intertia(self):
+
+        j_linear = self.lf.settings['moving_mass'] / (2 * np.pi * self.drivetrain.pitch)**2
+        j_in = self.coupler.j + self.gear.j_in
+        j_out = self.gear.j_out + self.drivetrain.j + j_linear
+        j_load = j_in + j_out * self.gear.ratio**2
+        j_ratio = j_load / self.motor.j
+        j_rotating = self.motor.j + j_in + (self.gear.j_out + self.drivetrain.j) * self.gear.ratio**2
+
+        self._tau_rotating_scale = 2.0 * np.pi * j_rotating * self.settings['safety_factor']
+        self._tau_linear_scale = (self.drivetrain.lead * self.gear.ratio) / (2.0 * np.pi)
+
+        self.stats['drivetrain_type'] = self.drivetrain.type
+        self.stats['gear_ratio'] = self.gear.ratio
+        self.stats['j_motor'] = self.motor.j
+        self.stats['j_coupler'] = self.coupler.j
+        self.stats['j_gear_in'] = self.gear.j_in
+        self.stats['j_gear_out'] = self.gear.j_out
+        self.stats['j_drivetrain'] = self.drivetrain.j
+        self.stats['j_linear'] = j_linear
+        self.stats['j_in'] = j_in
+        self.stats['j_out'] = j_out
+        self.stats['j_load'] = j_load
+        self.stats['j_ratio'] = j_ratio
+        self.stats['j_rotating'] = j_rotating
+
+    def _get_revs_from_x(self, x):
+        return x * self.drivetrain.pitch
+    
+    def _get_hz_from_v(self, v):
+        return v * self.drivetrain.pitch
+
+    def _get_hzps_from_a(self, a):
+        return a * self.drivetrain.pitch
+
+    def _get_tau_rotating_from_hzps(self, hzps):
+        return hzps * self._tau_rotating_scale
+
+    def _get_tau_linear_from_f(self, f):
+        return f * self._tau_linear_scale
+
+    def _get_tau_motor_from_hz(self, hz):
+        return self.motor.tau(hz) 
