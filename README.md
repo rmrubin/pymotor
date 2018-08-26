@@ -20,6 +20,8 @@ $ pip install pymotor
 
 The math used to calculate force, inertia and torque is shown below. Note that angular velocity and angular acceleration in the equations below are in rad/s and rad/s<sup>2</sup>, respectively. Internally, the software stores these values as Hz and Hz/s. 
 
+![Force Profile Image](/readme/equations.png)
+
 ## Physical Units
 
 The native physical units used by the package are shown in the table below. Functions in the module conversions.py are provided so parameters can be entered in other units.
