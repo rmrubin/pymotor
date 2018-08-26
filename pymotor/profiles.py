@@ -80,12 +80,12 @@ class LinearMotion(Profile):
         settings=None,
         fs = 1000,
         max_velocity = 1,
-        acc_mode = 'T',
+        acc_mode = 'time',
         acc_value = 1,
         acc_smooth = True,
-        con_mode = 'T',
+        con_mode = 'time',
         con_value = 1,
-        dec_mode = 'T',
+        dec_mode = 'time',
         dec_value = 1,
         dec_smooth = True,
         ):
@@ -224,30 +224,30 @@ class LinearMotion(Profile):
         else:
             dec_smooth = True
 
-        if acc_mode == 'X':
+        if acc_mode == 'distance':
             acc_t1 = self._get_t1_from_v1_and_x1(max_velocity, acc_value)
-        elif acc_mode == 'A':
+        elif acc_mode == 'acceleration':
             acc_t1 = self._get_t1_from_v1_and_a1(max_velocity, acc_value)
-        elif acc_mode == 'T':
+        elif acc_mode == 'time':
             acc_t1 = acc_value
         else:
-            raise ValueError("Acceptable input for acc_mode is 'X', 'T', or 'A'.")    
+            raise ValueError("Acceptable input for acc_mode is 'distance', 'time', or 'acceleration'.")    
 
-        if con_mode == 'X':
+        if con_mode == 'distance':
             con_t1 = self._get_t1_from_v1_and_x1(max_velocity, con_value)
-        elif con_mode == 'T':
+        elif con_mode == 'time':
             con_t1 = con_value
         else:
-            raise ValueError("Acceptable input for con_mode is 'X' or 'T'.")
+            raise ValueError("Acceptable input for con_mode is 'distance' or 'time'.")
 
-        if dec_mode == 'X':
+        if dec_mode == 'distance':
             dec_t1 = self._get_t1_from_v1_and_x1(max_velocity, dec_value)
-        elif dec_mode == 'A':
+        elif dec_mode == 'acceleration':
             dec_t1 = self._get_t1_from_v1_and_a1(max_velocity, dec_value)
-        elif dec_mode == 'T':
+        elif dec_mode == 'time':
             dec_t1 = dec_value
         else:
-            raise ValueError("Acceptable input for dec_mode is 'X', 'T', or 'A'.")
+            raise ValueError("Acceptable input for dec_mode is 'distance', 'time', or 'acceleration'.")
 
         acc_profile = self._gen_acc_from_v_and_t(v1=max_velocity, t1=acc_t1, smooth=acc_smooth, fs=fs)
         con_profile = self._gen_con_from_v_and_t(v1=max_velocity, t1=con_t1, x0=acc_profile['x'].iloc[-1], fs=fs)
@@ -303,15 +303,13 @@ class LinearForce(Profile):
         filename=None,
         plot_title='Required Force',
         t_label='Time (s)',
-        x_label='Distance (m)',
         v_label='Velocity (m/s)',
-        a_label='Acceleration (m/s^2)',
         f_label='Force (N)',
         ):
 
-        df = self.profile[['t', 'f', 'a', 'v', 'x']]
-        df = df.rename(columns={'t': t_label, 'f': f_label, 'a': a_label, 'v': v_label, 'x': x_label})
-        plots._plot_df(df, plot_title=plot_title, filename=filename)
+        df = self.profile[['t', 'f', 'v']]
+        df = df.rename(columns={'t': t_label, 'f': f_label, 'v': v_label})
+        plots._plot_df(df, plot_title=plot_title, filename=filename, height=6.0)
 
     def _calc_force_constants(self):
 
@@ -402,6 +400,7 @@ class AngularTorque(Profile):
 
         self._tau_rotating_scale = 2.0 * np.pi * j_rotating * self.settings['safety_factor']
         self._tau_linear_scale = (self.drivetrain.lead * self.gear.ratio) / (2.0 * np.pi)
+        self._xva_scale = self.drivetrain.pitch / self.gear.ratio
 
         self.stats['drivetrain_type'] = self.drivetrain.type
         self.stats['gear_ratio'] = self.gear.ratio
@@ -418,13 +417,13 @@ class AngularTorque(Profile):
         self.stats['j_rotating'] = j_rotating
 
     def _get_revs_from_x(self, x):
-        return x * self.drivetrain.pitch
+        return x * self._xva_scale
     
     def _get_hz_from_v(self, v):
-        return v * self.drivetrain.pitch
+        return v * self._xva_scale
 
     def _get_hzps_from_a(self, a):
-        return a * self.drivetrain.pitch
+        return a * self._xva_scale
 
     def _get_tau_rotating_from_hzps(self, hzps):
         return hzps * self._tau_rotating_scale

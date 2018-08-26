@@ -25,7 +25,7 @@ def _plot_df(df,
 
         plt.subplot(num_plots, 1, i + 1)
         plt.plot(df.iloc[:, 0].get_values(), df.iloc[:, i + 1].get_values(),
-            linestyle='solid', linewidth=0.5, color=(0.0, 0.0, 0.0))
+            linestyle='solid', linewidth=1, color=(0.0, 0.0, 0.0))
         plt.grid(linestyle=':', linewidth=1, color=(0.75, 0.75, 0.75))
         plt.ylabel(labels[i + 1])
 
@@ -62,10 +62,10 @@ def _plot_df_dual(df, series,
 
         plt.subplot(num_plots, 1, i + 1)
         plt.plot(df.iloc[:, 0].get_values(), df.iloc[:, i + 1].get_values(),
-            linestyle='solid', linewidth=0.5, color=(0.0, 0.0, 0.0))
+            linestyle='solid', linewidth=1, color=(0.0, 0.0, 0.0))
         if i == 0:
             plt.plot(df.iloc[:, 0].get_values(), series.get_values(),
-                linestyle=':', linewidth=0.5, color=(1.0, 0.0, 0.0))
+                linestyle='--', linewidth=1, color=(1.0, 0.0, 0.0))
         plt.grid(linestyle=':', linewidth=1, color=(0.75, 0.75, 0.75))
         plt.ylabel(labels[i + 1])
 
