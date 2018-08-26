@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is about the app.
+(Text goes here.)
 
 ## Development Status
 
@@ -12,7 +12,7 @@ PyMotor is being developed with Python 3.7 using packages described in requireme
 
 Some versions of this package are uploaded to pypi.org and can be installed, at your own risk, like this:
 
-``` python
+``` bash
 $ pip install pymotor
 ```
 
@@ -61,6 +61,7 @@ lm_settings = {
 lm = pm.LinearMotion(lm_settings)
 lm.plot()
 ```
+![Motion Profile Image](/readme/motion.png)
 
 ### Converting to a Linear Force Profile
 
@@ -78,6 +79,7 @@ lf_settings = {
 lf = pm.LinearForce(lf_settings, lm)
 lf.plot()
 ```
+![Force Profile Image](/readme/force.png)
 
 ### Defining a Motor Object
 
@@ -111,6 +113,7 @@ curve_tau = [
 motor = pm.Motor(curve_hz=curve_hz, curve_tau=curve_tau, j=pm.gcm2(460))
 motor.plot()
 ```
+![Motor Torque Curve Image](/readme/motor.png)
 
 ### Defining Other Drivetrain Objects
 
@@ -128,6 +131,8 @@ screw = pm.Screw(lead=pm.inch(.05), j=pm.gcm2(20))
 at = pm.AngularTorque(lf, motor=motor, coupler=coupler, gear=gear, drivetrain=screw)
 at.plot()
 ```
+![Torque Profile Image](/readme/torque.png)
+
 ## Planned Changes
 - [ ] More complete conversions.py module.
 - [ ] Reduction of pandas DataFrame copy operations.
