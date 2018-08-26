@@ -36,6 +36,7 @@ Angular Velocity | hz | Hz
 Angular Acceleration | hzps | Hz/s
 Torque | tau | N*m
 Moment of Inertia | j | kg*m<sup>2</sup>
+Angle | incline_angle | °
 
 ## Usage
 
@@ -45,16 +46,16 @@ Moment of Inertia | j | kg*m<sup>2</sup>
 import pymotor as pm
 
 lm_settings = {
-    'fs': 100000.0,
-    'max_velocity': pm.ipm(90),
-    'acc_mode': 'X',
-    'acc_value': pm.inch(.1), 
+    'fs': 10000.0,
+    'max_velocity': pm.ipm(40),
+    'acc_mode': 'time',
+    'acc_value': 0.06, 
     'acc_smooth': True,
-    'con_mode': 'X',
-    'con_value': pm.inch(.05),
-    'dec_mode': 'X',
-    'dec_value': pm.inch(.1),
-    'dec_smooth': True,
+    'con_mode': 'distance',
+    'con_value': pm.inch(.01),
+    'dec_mode': 'acceleration',
+    'dec_value': 0.25,
+    'dec_smooth': False,
 }
 
 lm = pm.LinearMotion(lm_settings)
@@ -66,10 +67,10 @@ lm.plot()
 ``` python
 lf_settings = {
     'safety_factor': 2,
-    'moving_mass': 10,
+    'moving_mass': 100,
     'preload_force': 0.1,
     'efficiency': 0.9,
-    'incline_angle': 0,
+    'incline_angle': 45,
     'friction_coef': 0.1,
     'gravity': 9.8,
 }
@@ -94,7 +95,7 @@ curve_hz = [
     pm.rpm(900),
     pm.rpm(1200),
     pm.rpm(1500),
-    pm.rpm(1800)
+    pm.rpm(1800),
 ]
 
 curve_tau = [
@@ -104,21 +105,21 @@ curve_tau = [
     0.9,
     0.7,
     0.6,
-    0.5
+    0.5,
 ]
 
-j = pm.gcm2(460)
-
-motor = pm.Motor(curve_hz=curve_hz, curve_tau=curve_tau, j=j)
+motor = pm.Motor(curve_hz=curve_hz, curve_tau=curve_tau, j=pm.gcm2(460))
 motor.plot()
 ```
 
 ### Defining Other Drivetrain Objects
 
+Other necessary drivetrain objects are created in the following code. Gear ratios, drive screw lead, and moments of inertia are used in the torque generation process. The conversion functions gcm2() and inch() are used to convert from g*cm<sup>2</sup> and inches, respectively, to native units.
+
 ``` python
-coupler = pm.Coupler(j=pm.gcm2(460))
-gear = pm.Gear(ratio=0.25, j_in=pm.gcm2(460), j_out=pm.gcm2(460))
-screw = pm.Screw(lead=pm.inch(.05), j=pm.gcm2(460))
+coupler = pm.Coupler(j=pm.gcm2(5))
+gear = pm.Gear(ratio=0.5, j_in=pm.gcm2(10), j_out=pm.gcm2(15))
+screw = pm.Screw(lead=pm.inch(.05), j=pm.gcm2(20))
 ```
 
 ### Generating a Torque Profile
@@ -127,3 +128,8 @@ screw = pm.Screw(lead=pm.inch(.05), j=pm.gcm2(460))
 at = pm.AngularTorque(lf, motor=motor, coupler=coupler, gear=gear, drivetrain=screw)
 at.plot()
 ```
+## Planned Changes
+- [ ] More complete conversions.py module.
+- [ ] Reduction of pandas DataFrame copy operations.
+- [ ] Configurable plot units.
+- [ ] Stepper motor table and three-phase motor signal generation. 
