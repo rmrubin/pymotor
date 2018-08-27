@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pymotor",
-    version="0.2.10",
+    version="0.3.3",
     install_requires=[
             'matplotlib==2.2.2',
             'numpy==1.15.0',
@@ -15,7 +15,7 @@ setuptools.setup(
       ],
     author="Randy Rubin",
     author_email="randymrubin@gmail.com",
-    description="Generates motion and force profiles.",
+    description="Generates motion, force and torque profiles for electric motor selection.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rmrubin/pymotor",
