@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pymotor",
-    version="0.3.3",
+    version="0.3.4",
     install_requires=[
             'matplotlib==2.2.2',
             'numpy==1.15.0',
