@@ -354,7 +354,7 @@ class AngularTorque(Profile):
         self.settings['safety_factor'] = self.lf.settings['safety_factor']
 
         self.stats = {}
-        self._calc_intertia()
+        self._calc_torque_constants()
 
         revs_series = self.profile['x'].copy()
         self.profile['revs'] = revs_series.apply(self._get_revs_from_x)
@@ -389,18 +389,18 @@ class AngularTorque(Profile):
         series = self.profile['tau_motor']
         plots._plot_df_dual(df, series, plot_title=plot_title, filename=filename, height=6.0)
 
-    def _calc_intertia(self):
+    def _calc_torque_constants(self):
 
         j_linear = self.lf.settings['moving_mass'] / (2 * np.pi * self.drivetrain.pitch)**2
         j_in = self.coupler.j + self.gear.j_in
         j_out = self.gear.j_out + self.drivetrain.j + j_linear
-        j_load = j_in + j_out * self.gear.ratio**2
+        j_load = j_in + j_out / self.gear.ratio**2
         j_ratio = j_load / self.motor.j
-        j_rotating = self.motor.j + j_in + (self.gear.j_out + self.drivetrain.j) * self.gear.ratio**2
+        j_rotating = self.motor.j + j_in + (self.gear.j_out + self.drivetrain.j) / self.gear.ratio**2
 
         self._tau_rotating_scale = 2.0 * np.pi * j_rotating * self.settings['safety_factor']
-        self._tau_linear_scale = (self.drivetrain.lead * self.gear.ratio) / (2.0 * np.pi)
-        self._xva_scale = self.drivetrain.pitch / self.gear.ratio
+        self._tau_linear_scale = self.drivetrain.lead / (2.0 * np.pi * self.gear.ratio)
+        self._xva_scale = self.drivetrain.pitch * self.gear.ratio
 
         self.stats['drivetrain_type'] = self.drivetrain.type
         self.stats['gear_ratio'] = self.gear.ratio

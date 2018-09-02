@@ -1,17 +1,14 @@
 
 class Direct:
-    def __init__(self, j=0.0, d=0.0):
+    def __init__(self, j=0.0):
         self.type = 'direct'
         self.j = j
-        self.d_in = d
 
 
 class Coupler:
-    def __init__(self, j=0.0, d_in=0.0, d_out=0.0):
+    def __init__(self, j=0.0):
         self.type = 'coupler'
         self.j = j
-        self.d_in = d_in
-        self.d_out = d_out
 
 
 class Wheel:
@@ -19,7 +16,6 @@ class Wheel:
         self.type = 'wheel'
         self.diameter = diameter
         self.j = j
-        self.d
 
 
 class Screw:
@@ -42,10 +38,9 @@ class Screw:
 
 
 class Gear:
-    def __init__(self, ratio, j_in=0.0, j_out=0.0, d_in=0.0, d_out=0.0):
+    def __init__(self, ratio=1.0, j_in=0.0, j_out=0.0):
         self.type = 'gear'
         self.ratio = ratio
         self.j_in = j_in
         self.j_out = j_out
-        self.d_in = d_in
-        self.d_out = d_out
+ 

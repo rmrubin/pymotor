@@ -73,11 +73,8 @@ lm_settings = {
 lm = pm.LinearMotion(lm_settings)
 lm.plot()
 ```
-<<<<<<< HEAD
 ![Motion Profile Image](https://raw.githubusercontent.com/rmrubin/pymotor/master/readme/motion.png)
-=======
-![Motion Profile Image](/readme/motion.png)
->>>>>>> 4d79c568eecfb6c786853b931442cf7b0889cbb1
+
 
 ### Converting to a Linear Force Profile
 
