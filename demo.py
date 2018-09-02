@@ -11,7 +11,7 @@ if __name__ == '__main__':
         'acc_value': 0.06, 
         'acc_smooth': True,
         'con_mode': 'distance',
-        'con_value': pm.inch(.01),
+        'con_value': pm.inch(0.02),
         'dec_mode': 'acceleration',
         'dec_value': 0.25,
         'dec_smooth': False,

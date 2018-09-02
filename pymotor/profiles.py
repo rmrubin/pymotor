@@ -141,11 +141,14 @@ class LinearMotion(Profile):
         t = t / fs
         return t
 
-    def _get_t1_from_v1_and_x1(self, v1, x1):
-        return (2 / v1) * x1
+    def _get_t_from_vmax_and_x(self, v, x):
+        return (2 * x) / v
 
-    def _get_t1_from_v1_and_a1(self, v1, a1):
-        return (1 / a1) * v1
+    def _get_t_from_vcon_and_x(self, v, x):
+        return x / v
+
+    def _get_t_from_vmax_and_a(self, v, a):
+        return v / a
 
     def _gen_acc_from_v_and_t(self, v1, t1, fs, smooth):
 
@@ -225,25 +228,25 @@ class LinearMotion(Profile):
             dec_smooth = True
 
         if acc_mode == 'distance':
-            acc_t1 = self._get_t1_from_v1_and_x1(max_velocity, acc_value)
+            acc_t1 = self._get_t_from_vmax_and_x(max_velocity, acc_value)
         elif acc_mode == 'acceleration':
-            acc_t1 = self._get_t1_from_v1_and_a1(max_velocity, acc_value)
+            acc_t1 = self._get_t_from_vmax_and_a(max_velocity, acc_value)
         elif acc_mode == 'time':
             acc_t1 = acc_value
         else:
             raise ValueError("Acceptable input for acc_mode is 'distance', 'time', or 'acceleration'.")    
 
         if con_mode == 'distance':
-            con_t1 = self._get_t1_from_v1_and_x1(max_velocity, con_value)
+            con_t1 = self._get_t_from_vcon_and_x(max_velocity, con_value)
         elif con_mode == 'time':
             con_t1 = con_value
         else:
             raise ValueError("Acceptable input for con_mode is 'distance' or 'time'.")
 
         if dec_mode == 'distance':
-            dec_t1 = self._get_t1_from_v1_and_x1(max_velocity, dec_value)
+            dec_t1 = self._get_t_from_vmax_and_x(max_velocity, dec_value)
         elif dec_mode == 'acceleration':
-            dec_t1 = self._get_t1_from_v1_and_a1(max_velocity, dec_value)
+            dec_t1 = self._get_t_from_vmax_and_a(max_velocity, dec_value)
         elif dec_mode == 'time':
             dec_t1 = dec_value
         else:
