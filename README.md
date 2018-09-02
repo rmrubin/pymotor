@@ -137,7 +137,7 @@ Other necessary drivetrain objects are created in the following code. Gear ratio
 
 ``` python
 coupler = pm.Coupler(j=pm.gcm2(5))
-gear = pm.Gear(ratio=0.5, j_in=pm.gcm2(10), j_out=pm.gcm2(15))
+gear = pm.Gear(ratio=2, j_in=pm.gcm2(10), j_out=pm.gcm2(15))
 screw = pm.Screw(lead=pm.inch(.05), j=pm.gcm2(20))
 ```
 
