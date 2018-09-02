@@ -13,6 +13,8 @@ PyMotor is being developed with Python 3.7 using packages described in requireme
 Some versions of this package are uploaded to pypi.org and can be installed, at your own risk, like this:
 
 ``` bash
+$ pip install numpy
+$ pip install pandas
 $ pip install pymotor
 ```
 

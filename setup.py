@@ -6,12 +6,12 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pymotor",
-    version="0.3.4",
+    version="0.3.5",
     install_requires=[
-            'matplotlib==2.2.2',
-            'numpy==1.15.0',
-            'pandas==0.22.0',
-            'scipy==1.1.0',
+            'matplotlib',
+            'numpy',
+            'pandas',
+            'scipy',
       ],
     author="Randy Rubin",
     author_email="randymrubin@gmail.com",
