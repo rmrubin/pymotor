@@ -268,15 +268,15 @@ class LinearMotion(Profile):
             'acc_a_max': acc_profile['a'].max(),
             'acc_a_mean': acc_profile['a'].mean(),
             'acc_t': acc_profile['x'].size / fs,
-            'acc_x': acc_profile['x'].ptp(),
+            'acc_x': np.ptp(acc_profile['x']),
             'con_size': con_profile['x'].size,
             'con_t': con_profile['x'].size / fs,
-            'con_x': con_profile['x'].ptp(),
+            'con_x': np.ptp(con_profile['x']),
             'dec_size': dec_profile['x'].size,
             'dec_a_min': dec_profile['a'].min(),
             'dec_a_mean': dec_profile['a'].mean(),
             'dec_t': dec_profile['x'].size / fs,
-            'dec_x': dec_profile['x'].ptp(),
+            'dec_x': np.ptp(dec_profile['x']),
             }
 
         return (profile, stats)
